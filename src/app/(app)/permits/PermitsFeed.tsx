@@ -276,9 +276,17 @@ export default function PermitsFeed({ permits }: { permits: PermitRow[] }) {
                   <span className="contact-label">Permit type</span>
                   <span className="contact-val">{permit.raw?.permit_sub_type || permit.work_type || '—'}</span>
                 </div>
+                {(permit.raw?.owner_name || permit.raw?.applicant || permit.contractor_name) && (
+                  <div className="contact-row">
+                    <span className="contact-label">Owner / Applicant</span>
+                    <span className="contact-val">
+                      {permit.raw?.owner_name || permit.raw?.applicant || permit.contractor_name}
+                    </span>
+                  </div>
+                )}
                 {permit.contractor_name && (
                   <div className="contact-row">
-                    <span className="contact-label">Company</span>
+                    <span className="contact-label">Contractor</span>
                     <span className="contact-val">{permit.contractor_name}</span>
                   </div>
                 )}
