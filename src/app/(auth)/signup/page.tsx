@@ -81,7 +81,7 @@ export default function SignupPage() {
             </div>
 
             <div className="auth-field">
-              <label className="auth-label">Company website <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-3)', fontWeight: 400, fontStyle: 'italic', fontFamily: 'var(--font-serif)', fontSize: '12px' }}>optional</span></label>
+              <label className="auth-label">Company website</label>
               <input className="auth-input" type="url" placeholder="guzmanblueprint.com" autoComplete="url" value={form.website} onChange={set('website')} />
               <div className="auth-hint">We&apos;ll use it to personalize your outreach and link contractors to your work.</div>
             </div>

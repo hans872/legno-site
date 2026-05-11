@@ -1,4 +1,42 @@
-export default function ActivityPage() {
+import { createClient } from '@/lib/supabase/server'
+
+export const revalidate = 0
+
+export default async function ActivityPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString()
+
+  const [{ count: sentCount }, { count: qualifiedCount }, { count: billedCount }, { data: billing }] =
+    await Promise.all([
+      supabase
+        .from('outreach')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('status', 'sent')
+        .gte('sent_at', weekAgo),
+      supabase
+        .from('replies')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('classification', 'qualified')
+        .gte('received_at', weekAgo),
+      supabase
+        .from('billed_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('status', 'paid'),
+      supabase
+        .from('billed_events')
+        .select('amount_cents')
+        .eq('user_id', user!.id)
+        .eq('status', 'paid'),
+    ])
+
+  const totalSpent = (billing ?? []).reduce((sum, b) => sum + b.amount_cents, 0)
+  const isFirstReplyFree = (billedCount ?? 0) === 0
+
   return (
     <>
       <div className="app-topbar">
@@ -11,8 +49,12 @@ export default function ActivityPage() {
       <div className="app-page">
         <div className="app-card" style={{ padding: '32px', marginBottom: 28, textAlign: 'center', background: 'var(--ink)', color: 'var(--paper)', borderRadius: 8 }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'rgba(244,239,230,0.55)', marginBottom: 8 }}>Total spent</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 64, letterSpacing: '-0.03em', lineHeight: 1 }}>$0</div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(244,239,230,0.55)', marginTop: 8 }}>First reply still on us</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 64, letterSpacing: '-0.03em', lineHeight: 1 }}>
+            ${(totalSpent / 100).toFixed(0)}
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(244,239,230,0.55)', marginTop: 8 }}>
+            {isFirstReplyFree ? 'First qualified reply is on us' : `${billedCount} qualified ${(billedCount ?? 0) === 1 ? 'reply' : 'replies'} billed`}
+          </div>
         </div>
 
         <div className="app-section">
@@ -20,19 +62,15 @@ export default function ActivityPage() {
           <div className="app-card">
             <div className="app-row">
               <div className="app-row-label"><strong>Emails sent</strong><span>Outreach via Gmail</span></div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em' }}>28</div>
-            </div>
-            <div className="app-row">
-              <div className="app-row-label"><strong>Open rate</strong><span>Unique opens tracked</span></div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em', color: 'var(--success)' }}>61%</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em' }}>{sentCount ?? 0}</div>
             </div>
             <div className="app-row">
               <div className="app-row-label"><strong>Qualified replies</strong><span>Contractors who responded with intent</span></div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em', color: 'var(--success)' }}>1</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em', color: (qualifiedCount ?? 0) > 0 ? 'var(--success)' : 'inherit' }}>{qualifiedCount ?? 0}</div>
             </div>
             <div className="app-row">
-              <div className="app-row-label"><strong>Billed replies</strong><span>Replies charged at $50 each</span></div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em' }}>0</div>
+              <div className="app-row-label"><strong>Billed replies</strong><span>$50 per qualified reply after first</span></div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 24, letterSpacing: '-0.02em' }}>{billedCount ?? 0}</div>
             </div>
           </div>
         </div>

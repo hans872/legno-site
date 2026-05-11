@@ -52,7 +52,7 @@ export default function AppShell({
               <line x1="12" y1="19" x2="12" y2="23" />
               <line x1="8" y1="23" x2="16" y2="23" />
             </svg>
-            Voice &amp; templates
+            Templates
           </Link>
           <Link href="/activity" className={`nav-item${path === '/activity' ? ' active' : ''}`}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
