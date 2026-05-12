@@ -4,12 +4,11 @@ import { createClient } from '@supabase/supabase-js'
 // Building and Safety - Building Permits Issued from 2020 to Present
 const LADBS_URL = 'https://data.lacity.org/resource/pi9x-tg5x.json'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
-
 export async function GET() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
   const url = new URL(LADBS_URL)
   url.searchParams.set('$limit', '50')
   url.searchParams.set('$order', 'issue_date DESC')
