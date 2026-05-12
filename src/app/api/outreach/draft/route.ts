@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 type PermitType = 'ground-up' | 'adu' | 'remodel' | 'other'
 
 function classifyPermit(workType: string, description: string): PermitType {
@@ -61,6 +59,7 @@ export async function POST(request: Request) {
     subject = applyTemplate(tpl.subject, permit)
     body = applyTemplate(tpl.body, permit) + (signature ? `\n\n${signature}` : '')
   } else {
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const writingSample = voice?.writing_sample
     const recipientLabel = (permitType === 'ground-up' || permitType === 'remodel') ? 'architect' : 'contractor'
     const systemPrompt = `You are a ghostwriter for a blueprint estimator or small construction contractor.

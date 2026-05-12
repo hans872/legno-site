@@ -2,11 +2,10 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 type Classification = 'qualified' | 'question' | 'not_now' | 'auto_reply'
 
 async function classifyReply(body: string): Promise<Classification> {
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const msg = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 10,
