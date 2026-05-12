@@ -63,7 +63,8 @@ function formatFiled(iso: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-type ApolloContact = { name: string; title: string | null; email: string | null; organization_name: string | null }
+type HunterContact = { name: string; title: string | null; email: string | null; organization_name: string | null }
+type LadbsContact = { company: string; name: string; issueDate: string }
 
 export default function PermitsFeed({ permits }: { permits: PermitRow[] }) {
   const [filter, setFilter] = useState<Filter>('all')
@@ -77,7 +78,8 @@ export default function PermitsFeed({ permits }: { permits: PermitRow[] }) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [lookupQuery, setLookupQuery] = useState<Record<string, string>>({})
   const [lookupLoading, setLookupLoading] = useState<string | null>(null)
-  const [contacts, setContacts] = useState<Record<string, ApolloContact[]>>({})
+  const [contacts, setContacts] = useState<Record<string, HunterContact[]>>({})
+  const [ladbsContacts, setLadbsContacts] = useState<Record<string, LadbsContact[]>>({})
 
   const today = new Date()
     .toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -101,11 +103,30 @@ export default function PermitsFeed({ permits }: { permits: PermitRow[] }) {
   async function handleExpand(id: string) {
     if (expanded === id) { setExpanded(null); return }
     setExpanded(id)
-    // Pre-fill lookup query from permit's contractor name if available
     const permit = classified.find(p => p.id === id)
-    if (permit?.contractor_name && !lookupQuery[id]) {
+
+    // Fetch LADBS historical contacts for this address
+    if (permit?.address && !ladbsContacts[id]) {
+      fetch('/api/enrich/ladbs-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: permit.address }),
+      }).then(r => r.json()).then(data => {
+        if (data.contacts?.length) {
+          setLadbsContacts(c => ({ ...c, [id]: data.contacts }))
+          // Pre-fill Hunter lookup with top company name
+          if (!lookupQuery[id]) {
+            setLookupQuery(q => ({ ...q, [id]: data.contacts[0].company }))
+          }
+        }
+      }).catch(() => null)
+    }
+
+    // Pre-fill lookup from contractor_name if no LADBS result yet
+    if (permit?.contractor_name && !lookupQuery[id] && !ladbsContacts[id]) {
       setLookupQuery(q => ({ ...q, [id]: permit.contractor_name! }))
     }
+
     if (!drafts[id]) {
       setLoading(id)
       try {
@@ -304,7 +325,25 @@ export default function PermitsFeed({ permits }: { permits: PermitRow[] }) {
                   </button>
                 </div>
 
-                {/* Apollo contact lookup */}
+                {/* LADBS historical contacts */}
+                {ladbsContacts[permit.id]?.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--ink-3)', marginBottom: 6 }}>
+                      Previous permits at this address
+                    </div>
+                    {ladbsContacts[permit.id].map((c, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{c.company}</div>
+                          {c.name && <div style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)' }}>{c.name}</div>}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>{c.issueDate}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Hunter contact lookup */}
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
                   <input
                     type="text"
