@@ -313,16 +313,28 @@ export default function PermitsFeed({ permits }: { permits: PermitRow[] }) {
                 )}
                 <div className="contact-row">
                   <span className="contact-label">Permit #</span>
-                  <button
-                    onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(permit.permit_number + ' LADBS Los Angeles building permit')}`, '_blank')}
-                    style={{
-                      background: 'none', border: 'none', padding: 0,
-                      color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: 11,
-                      textDecoration: 'underline', cursor: 'pointer', letterSpacing: '0.04em',
-                    }}
-                  >
-                    {permit.permit_number} ↗
-                  </button>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={() => window.open(`https://data.lacity.org/A-Prosperous-City/Building-and-Safety-Building-Permits-Issued-from-2/pi9x-tg5x?$where=permit_nbr=%27${encodeURIComponent(permit.permit_number)}%27`, '_blank')}
+                      style={{
+                        background: 'none', border: 'none', padding: 0,
+                        color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: 11,
+                        textDecoration: 'underline', cursor: 'pointer', letterSpacing: '0.04em',
+                      }}
+                    >
+                      {permit.permit_number} ↗
+                    </button>
+                    <button
+                      onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(permit.permit_number + ' LADBS Los Angeles building permit')}`, '_blank')}
+                      style={{
+                        background: 'none', border: 'none', padding: 0,
+                        color: 'var(--ink-3)', fontFamily: 'var(--font-mono)', fontSize: 11,
+                        textDecoration: 'underline', cursor: 'pointer', letterSpacing: '0.04em',
+                      }}
+                    >
+                      Google ↗
+                    </button>
+                  </div>
                 </div>
 
                 {/* LADBS historical contacts */}
