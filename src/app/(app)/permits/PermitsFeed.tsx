@@ -267,7 +267,16 @@ export default function PermitsFeed({ permits }: { permits: PermitRow[] }) {
                 </div>
                 <div className="card-right">
                   <div className="card-value">{formatValuation(permit.valuation)}</div>
-                  <span className="card-pid">{permit.permit_number}</span>
+                  <button
+                    className="card-pid"
+                    onClick={e => {
+                      e.stopPropagation()
+                      window.open(`https://data.lacity.org/A-Prosperous-City/Building-and-Safety-Building-Permits-Issued-from-2/pi9x-tg5x?$where=permit_nbr=%27${permit.permit_number}%27`, '_blank')
+                    }}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent)', textDecoration: 'underline', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.04em' }}
+                  >
+                    {permit.permit_number} ↗
+                  </button>
                 </div>
               </div>
 
